@@ -4,29 +4,84 @@
 #
 ##################################################
 
-echo "Determining system..."
-
 _SYSTEM=$(uname -s)
-
-echo "Customizing for ${_SYSTEM} system."
 
 find_darwin_major ()
 {
 	echo $(uname -r | cut -d \. -f 1)
 }
 
-if [ "xterm-256color" = $TERM ] ; then
-        if [ "Darwin" = $_SYSTEM ] ; then
+########################################################################
+#
+# Change flags for common commands based on `uname -s` ($_SYSTEM)
+#
+########################################################################
+
+LANG="C"
+LS_FLAGS="-F"
+LS_COLORS=""
+PS_FLAGS="aux"
+PS_SUFFIX="sort"
+DF_FLAGS="-h"
+
+if [ "Darwin" = $_SYSTEM ] ; then
+	if [ "xterm-256color" = $TERM ] ; then
                 if [ "10" = $(find_darwin_major) ] ; then
                         echo "  Changing terminal-type to xterm-color."
                         TERM="xterm-color"
                         export TERM
                 fi
-        fi
+	fi
+
+	LANG="en_US.UTF-8"
+
+	LS_FLAGS="-G -F"
+
+	LSCOLORS="DxGxcxdxCxegedabagacad"
+
+	PS_FLAGS="axo user,pid,vsz,rss,%mem,command -m"
+	PS_SUFFIX="sed 's/\ *$//' | grep -v grep"
+
+	DF_FLAGS="-Phl"
+elif [ "Linux" = ${_SYSTEM} ] ; then
+	LANG="C"
+
+	LS_FLAGS="--color -F -N -T 0"
+	if [ -z $LS_COLORS ] ; then
+		LS_COLORS="di=93"
+	else
+		LS_COLORS="$LS_COLORS:di=93"
+	fi
+
+	PS_FLAGS="axo user,pid,vsz,rsz,%mem,cmd --sort=vsize"
+	PS_SUFFIX="grep -v grep"
+	DF_FLAGS="-h"
+elif [ "SunOS" = ${_SYSTEM} ] ; then
+	PS_FLAGS="-ef"
+	PS_SUFFIX="sort"
+else
+	echo "Unknown system ${_SYSTEM}; using defaults..."
 fi
 
-LANG="en_US.UTF-8"
-export LANG
+export LANG LS_FLAGS LSCOLORS
+
+_BIN_LS="/bin/ls"
+_BIN_PS="/bin/ps"
+_BIN_DF="/bin/df"
+
+LS="${_BIN_LS} ${LS_FLAGS}"
+export LS
+
+df ()
+{
+	${_BIN_DF} ${DF_FLAGS}
+}
+
+########################################################################
+#
+# Prompt stuff
+#
+########################################################################
 
 path () 
 { 
@@ -75,31 +130,11 @@ export PS1
 
 unset _bred _bgrn _sgr0
 
+########################################################################
 #
-# Are we on a Mac?  If so, change the LANG setting
-# (so we have full UTF-8 capabilities).
+# Common Aliases
 #
-_BIN_LS="/bin/ls"
-if [ "Darwin" = ${_SYSTEM} ] ; then
-	LS="/bin/ls -G -F" ; export LS
-	LS_FLAGS="-G -F"
-	export LSCOLORS="DxGxcxdxCxegedabagacad"
-elif [ "Linux" = ${_SYSTEM} ] ; then
-	LS="/bin/ls --color -F -N -T 0" ; export LS
-	LS_FLAGS="--color -F -N -T 0"
-	if [ -z $LS_COLORS ] ; then
-		export LS_COLORS="di=93"
-	else
-		export LS_COLORS="$LS_COLORS:di=93"
-	fi
-else
-	LS="/bin/ls -F"
-	LS_FLAGS="-F"
-fi
-
-LS="${_BIN_LS} ${LS_FLAGS}"
-export LS
-
+########################################################################
 
 alias ls="${LS} -C"
 alias la="${LS} -aC"
@@ -116,10 +151,11 @@ alias diraht="${LS} -alhrt"
 alias mv='/bin/mv -i'
 alias cp='/bin/cp -i'
 
-alias j="jobs"
-alias today="date '+%-d %b %Y'"
+alias      j="jobs"
+alias  today="date '+%-d %b %Y'"
 alias todate="date '+%Y%m%d'"
 alias totime="date '+%Y%m%d_%H%M%S'"
+alias    now="date '+%Y%m%d_%H%M%S'"
 
 #
 # Berkeley Exit Function
@@ -140,8 +176,7 @@ alias totime="date '+%Y%m%d_%H%M%S'"
 h()
 {
         PATTERN=$1
-
-        if [ "$PATTERN" = "" ] ; then
+        if [ -z "$PATTERN" ] ; then
                 history
         else
                 history | grep $PATTERN
@@ -153,15 +188,7 @@ h()
 #
 killproc ()
 {
-	kill `ps aux | grep "${1}" | grep -v grep | awk '{print $2}'`
-}
-
-#
-# hidden grep
-#
-_grep()
-{
-	grep "${@}"
+	kill `ps ${PS_FLAGS} | grep "${1}" | grep -v grep | awk '{print $2}'`
 }
 
 #
@@ -171,42 +198,10 @@ p ()
 {
 	ARGS="${*}"
 
-	if [ "$ARGS" = "" ] ; then
-		if [ ${_SYSTEM} = "SunOS" ] ; then
-			/bin/ps -ef | sort
-		elif [ ${_SYSTEM} = "Linux" ] ; then
-			/bin/ps axo user,pid,vsz,rsz,%mem,cmd --sort=vsize | grep -v grep
-		elif [ ${_SYSTEM} = "Darwin" ] ; then
-			/bin/ps axo user,pid,vsz,rss,%mem,command -m | sed 's/\ *$//' | grep -v grep
-		else
-			/bin/ps aux | sort
-		fi
+	if [ -z "$ARGS" ] ; then
+		${_BIN_PS} ${PS_FLAGS} | eval ${PS_SUFFIX}
 	else
-		if [ ${_SYSTEM} = "SunOS" ] ; then
-			/bin/ps -ef | egrep "$ARGS" | grep -v grep | sort
-		elif [ ${_SYSTEM} = "Linux" ] ; then
-			/bin/ps axo user,pid,vsz,rsz,%mem,cmd --sort=vsize | egrep "$ARGS" | grep -v grep
-		elif [ ${_SYSTEM} = "Darwin" ] ; then
-			/bin/ps axo user,pid,vsz,rss,%mem,command -m | sed 's/\ *$//' | egrep "$ARGS" | grep -v grep
-		else
-			/bin/ps aux | egrep "$ARGS" | grep -v grep | sort
-		fi
-	fi
-
-}
-
-#
-# df  -  Need this because Mac OS X/Darwin has stupid mountpoints for some apps.
-#
-df ()
-{
-	ARGS="${*}";
-	if [ "$ARGS" = "" ]; then
-		if [ ${_SYSTEM} = "Darwin" ]; then
-			 /bin/df -Phl;
-		else
-			/bin/df -h;
-		fi;
+		${_BIN_PS} ${PS_FLAGS} | egrep "$ARGS" | eval ${PS_SUFFIX}
 	fi
 }
 
@@ -217,14 +212,10 @@ pv ()
 {
 	ARGS="${*}"
 
-	if [ ${_SYSTEM} = "SunOS" ] ; then
-		/bin/ps -ef | egrep -v "$ARGS" | grep -v grep
-	elif [ ${_SYSTEM} = "Linux" ] ; then
-		/bin/ps axo user,pid,vsz,rsz,%mem,cmd --sort=vsize | egrep -v "$ARGS" | grep -v grep
-	elif [ ${_SYSTEM} = "Darwin" ] ; then
-		/bin/ps axo user,pid,vsz,rss,%mem,command -m | sed 's/\ *$//' | egrep -v "$ARGS" | grep -v grep
+	if [ -z "$ARGS" ] ; then
+		p
 	else
-		/bin/ps aux | egrep -v "$ARGS" | grep -v grep
+		${_BIN_PS} ${PS_FLAGS} | egrep -v "$ARGS" | eval ${PS_SUFFIX}
 	fi
 }
 
