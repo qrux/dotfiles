@@ -64,7 +64,7 @@ else
 	echo "Unknown system ${_SYSTEM}; using defaults..."
 fi
 
-export LANG LS_FLAGS LSCOLORS
+export LANG LS_FLAGS LSCOLORS LS_COLORS
 
 _BIN_LS="/bin/ls"
 _BIN_PS="/bin/ps"
