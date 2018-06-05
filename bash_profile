@@ -51,7 +51,7 @@ elif [ "Linux" = ${_SYSTEM} ] ; then
 	#if [ -z $LS_COLORS ] ; then
 		#LS_COLORS="di=93"
 	#else
-		LS_COLORS="$LS_COLORS:di=93"
+		#LS_COLORS="$LS_COLORS:di=93"
 	#fi
 
 	PS_FLAGS="axo user,pid,vsz,rsz,%mem,cmd --sort=vsize"
