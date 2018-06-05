@@ -47,11 +47,12 @@ elif [ "Linux" = ${_SYSTEM} ] ; then
 	LANG="C"
 
 	LS_FLAGS="--color -F -N -T 0"
-	if [ -z $LS_COLORS ] ; then
-		LS_COLORS="di=93"
-	else
+	LS_COLORS="di=1;93:fi=0:ln=1;36:pi=106:so=35:bd=1;33:cd=1;31:or=31:mi=0:ex=35:*.rpm=90"
+	#if [ -z $LS_COLORS ] ; then
+		#LS_COLORS="di=93"
+	#else
 		LS_COLORS="$LS_COLORS:di=93"
-	fi
+	#fi
 
 	PS_FLAGS="axo user,pid,vsz,rsz,%mem,cmd --sort=vsize"
 	PS_SUFFIX="grep -v grep"
