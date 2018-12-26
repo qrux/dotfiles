@@ -13,7 +13,7 @@ else
 	cp -v bash_profile ~/.bashrc
 fi
 
-cp -v vimrc ~
+cp -v vimrc ~/.vimrc
 
 mkdir pv ~/bin
 cd ~/bin
