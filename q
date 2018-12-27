@@ -15,7 +15,7 @@ fi
 
 cp -v vimrc ~/.vimrc
 
-mkdir pv ~/bin
+mkdir -pv ~/bin
 cd ~/bin
 
 wget https://raw.githubusercontent.com/qrux/dotfiles/master/bin/darkdock
