@@ -4,20 +4,29 @@ cd ~
 mkdir -pv qrux-dotfiles
 cd qrux-dotfiles
 
-wget https://raw.githubusercontent.com/qrux/dotfiles/master/bash_profile
-wget https://raw.githubusercontent.com/qrux/dotfiles/master/vimrc
+#wget https://raw.githubusercontent.com/qrux/dotfiles/master/bash_profile
+#wget https://raw.githubusercontent.com/qrux/dotfiles/master/vimrc
 
-if [ -e ~/.bashrc ] ; then
+curl https://raw.githubusercontent.com/qrux/dotfiles/master/bash_profile -o bash_profile
+curl https://raw.githubusercontent.com/qrux/dotfiles/master/vimrc -o vimrc
+
+if [ ! -e ~/.profile ] ; then
+	mv bash_profile ~/.profile
+else if [ -e ~/.bashrc ] ; then
 	cat bash_profile >> ~/.bashrc
 else
 	cp -v bash_profile ~/.bashrc
 fi
 
 cp -v vimrc ~/.vimrc
-
 mkdir -pv ~/bin
 cd ~/bin
 
-wget https://raw.githubusercontent.com/qrux/dotfiles/master/bin/darkdock
+_SYSTEM=$(uname -s)
+if [ "Darwin" = $_SYSTEM ] ; then
+	#wget https://raw.githubusercontent.com/qrux/dotfiles/master/bin/darkdock
 
-chmod 0755 *
+	curl https://raw.githubusercontent.com/qrux/dotfiles/master/bin/darkdock -o darkdock
+fi
+
+chmod 0700 *
