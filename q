@@ -27,6 +27,7 @@ if [ "Darwin" = $_SYSTEM ] ; then
 	#wget https://raw.githubusercontent.com/qrux/dotfiles/master/bin/darkdock
 
 	curl https://raw.githubusercontent.com/qrux/dotfiles/master/bin/darkdock -o darkdock
+	curl https://raw.githubusercontent.com/qrux/dotfiles/master/bin/mac-set-hostname -o mac-set-hostname
 fi
 
 chmod 0700 *
