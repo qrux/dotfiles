@@ -12,7 +12,7 @@ curl https://raw.githubusercontent.com/qrux/dotfiles/master/vimrc -o vimrc
 
 if [ ! -e ~/.profile ] ; then
 	mv bash_profile ~/.profile
-else if [ -e ~/.bashrc ] ; then
+elif [ -e ~/.bashrc ] ; then
 	cat bash_profile >> ~/.bashrc
 else
 	cp -v bash_profile ~/.bashrc
