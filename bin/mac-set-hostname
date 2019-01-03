@@ -1,0 +1,12 @@
+#! /bin/bash
+
+TARGET_HOSTNAME=$1
+
+if [ -z $TARGET_HOSTNAME ] ; then
+	echo
+	echo "  Usage: $0 hostname"
+	echo
+	exit
+fi
+
+sudo scutil --set HostName "$TARGET_HOSTNAME"
